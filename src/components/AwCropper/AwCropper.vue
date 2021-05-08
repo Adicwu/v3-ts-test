@@ -14,14 +14,21 @@ import { Preview, CropperOptions, CroppedCanvasOptions, AwCropperProps, Emit } f
 function cropperModule (options: CropperOptions, preview: Preview, emit: Emit) {
   const imgDom = ref<HTMLImageElement>()
   const cropper = reactive<{
-    instance: Cropper | null,
+    instance: Cropper | null | any,
     isInit: boolean;
+    rotate: number;
   }>({
     instance: null,
-    isInit: false
+    isInit: false,
+    rotate: 0
   })
+  // 隐藏裁剪框
+  const hideCrop = () => {
+    const el: HTMLElement | null = cropper.instance!.cropBox
+    el && (el.style.opacity = '0')
+  }
   // 初始化裁剪器
-  const cropperInit = () => {
+  const cropperInit = (callback?: () => void) => {
     cropper.instance = new Cropper(imgDom.value!, {
       aspectRatio: 16 / 9,
       viewMode: 3,
@@ -30,19 +37,24 @@ function cropperModule (options: CropperOptions, preview: Preview, emit: Emit) {
       ...options,
       ready () {
         cropper.isInit = true
-        cropper.instance!.crop()
+        callback && callback()
       }
     })
   }
   // 加载裁剪器
   const replaceCropper = () => {
+    emit('replace', preview.origin)
     if (!cropper.isInit) {
-      cropperInit()
+      cropperInit(() => {
+        emit('init', cropper.instance)
+        if (typeof options.cropBoxResizable === 'boolean' && !options.cropBoxResizable) {
+          hideCrop()
+        }
+      })
     } else if (cropper.instance !== null) {
       const imgPath = preview.origin
       preview.origin = '' // 防止图片节点的src与将要替换的src相同，会导致死循环
       imgPath && cropper.instance.replace(imgPath, false)
-      emit('change', imgPath)
     }
   }
   /**
@@ -79,10 +91,37 @@ function cropperModule (options: CropperOptions, preview: Preview, emit: Emit) {
       })
     })
   }
+  /**
+   * 图片旋转
+   * @param type 旋转方向 smooth 顺时针；adverse 逆时针；默认 重置旋转
+   * @param deg 旋转角度 deg为默认单位
+   */
+  const rotate = (type = 'smooth', deg = 90) => {
+    switch (type) {
+      case 'smooth': {
+        cropper.rotate += deg
+        break
+      }
+      case 'adverse': {
+        cropper.rotate -= deg
+        break
+      }
+      default: {
+        cropper.rotate = 0
+      }
+    }
+    cropper.instance!.rotateTo(cropper.rotate)
+  }
+  /**
+   * 重置裁剪所有状态
+   */
+  const reset = () => cropper.instance!.reset()
   return {
     imgDom,
     replaceCropper,
-    getImageData
+    getImageData,
+    rotate,
+    reset
   }
 }
 // file处理 模块

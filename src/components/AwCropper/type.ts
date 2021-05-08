@@ -25,7 +25,27 @@ export interface CropperOptions {
    * crop 创建新裁剪框；move 移动背景；none 无操作
    * 默认 move
    */
-  dragMode?: 'crop' | 'move' | 'none'
+  dragMode?: 'crop' | 'move' | 'none';
+  /**
+   * 在裁剪框外是否设置黑色阴影
+   * 默认 true
+   */
+  modal?: boolean;
+  /**
+   * 裁剪框初始化大小（百分比格式，值为 0-1）
+   * 默认0.8
+   */
+  autoCropArea?: number;
+  /**
+   * 裁剪框是否可移动
+   * 默认 true
+   */
+  cropBoxMovable?: boolean;
+  /**
+  * 裁剪框是否可改变大小
+  * 默认 true
+  */
+  cropBoxResizable?: boolean;
 }
 export interface CroppedCanvasOptions {
   width?: number;
