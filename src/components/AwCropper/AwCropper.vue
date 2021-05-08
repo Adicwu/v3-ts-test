@@ -1,0 +1,194 @@
+<template>
+  <div class="aw-cropper" :style="selfStyle">
+    <input type="file" ref="fileDom" accept="image/*" @change="onFileChanged" />
+    <img :src="preview.origin" alt="" ref="imgDom" @load="replaceCropper" />
+  </div>
+</template>
+<script lang="ts">
+import { computed, CSSProperties, defineComponent, reactive, ref } from 'vue'
+import Cropper from 'cropperjs'
+import 'cropperjs/dist/cropper.css'
+import { fileToBase64, blobToBase64 } from './utils'
+import { Preview, CropperOptions, CroppedCanvasOptions, AwCropperProps, Emit } from './type'
+// cropperjs 模块
+function cropperModule (options: CropperOptions, preview: Preview, emit: Emit) {
+  const imgDom = ref<HTMLImageElement>()
+  const cropper = reactive<{
+    instance: Cropper | null,
+    isInit: boolean;
+  }>({
+    instance: null,
+    isInit: false
+  })
+  // 初始化裁剪器
+  const cropperInit = () => {
+    cropper.instance = new Cropper(imgDom.value!, {
+      aspectRatio: 16 / 9,
+      viewMode: 3,
+      dragMode: 'move',
+      guides: false,
+      ...options,
+      ready () {
+        cropper.isInit = true
+        cropper.instance!.crop()
+      }
+    })
+  }
+  // 加载裁剪器
+  const replaceCropper = () => {
+    if (!cropper.isInit) {
+      cropperInit()
+    } else if (cropper.instance !== null) {
+      const imgPath = preview.origin
+      preview.origin = '' // 防止图片节点的src与将要替换的src相同，会导致死循环
+      imgPath && cropper.instance.replace(imgPath, false)
+      emit('change', imgPath)
+    }
+  }
+  /**
+   * 获取裁剪结果
+   * @param options getCroppedCanvas的参数，用于处理裁剪后图片质量
+   * @param type 返回的结果类型 Blob | string | FormData
+   * @returns Promise
+   */
+  const getImageData = (options: CroppedCanvasOptions, type = 'Blob') => {
+    return new Promise((resolve, reject) => {
+      cropper.instance!.getCroppedCanvas(options).toBlob((blob: Blob | null) => {
+        if (blob) {
+          let result: Blob | FormData | string = blob
+          switch (type) {
+            case 'FormData': {
+              const fromData = new FormData()
+              fromData.append('croppedImage', blob)
+              result = fromData
+              resolve(result)
+              break
+            }
+            case 'path': {
+              blobToBase64(blob).then((res: string) => {
+                result = res
+                resolve(result)
+              })
+              break
+            }
+            default: resolve(result)
+          }
+        } else {
+          reject(new Error('bad blob'))
+        }
+      })
+    })
+  }
+  return {
+    imgDom,
+    replaceCropper,
+    getImageData
+  }
+}
+// file处理 模块
+function fileModule (preview: Preview) {
+  const fileDom = ref<HTMLInputElement>()
+  // file节点 change事件
+  const onFileChanged = async (e: Event) => {
+    const el = e.target as HTMLInputElement
+    const { accept, files } = el
+    if (files!.length === 1 && accept.includes('image')) {
+      try {
+        const imgPath = await fileToBase64(files![0])
+        preview.origin = imgPath
+      } catch (error) {
+        console.log(error, '图片处理错误')
+      }
+    }
+  }
+  // 手动触发的图片选择
+  const choseImg = () => {
+    fileDom.value!.click()
+  }
+  return {
+    onFileChanged,
+    fileDom,
+    choseImg
+  }
+}
+// 样式 模块
+function styleModule (props: AwCropperProps) {
+  const { width, height } = props
+  const selfStyle = computed<CSSProperties>(() => {
+    return {
+      width,
+      height
+    }
+  })
+  return {
+    selfStyle
+  }
+}
+export default defineComponent({
+  name: 'AwCropper',
+  props: {
+    /**
+     * Cropper 实例化对象的第二参数
+     * 详情参考 https://github.com/fengyuanchen/cropperjs#options
+     */
+    options: {
+      type: Object,
+      default: () => ({} as CropperOptions)
+    },
+    /**
+     * 组件自身宽
+     */
+    width: {
+      type: String,
+      default: '600px'
+    },
+    /**
+     * 组件自身高
+     */
+    height: {
+      type: String,
+      default: '300px'
+    }
+  },
+  setup (props: AwCropperProps, { emit }) {
+    const preview = reactive<Preview>({
+      path: '',
+      origin: ''
+    })
+    return {
+      preview,
+      ...fileModule(preview),
+      ...cropperModule(props.options, preview, emit),
+      ...styleModule(props)
+    }
+  }
+})
+</script>
+<style lang="less" scoped>
+.aw-cropper {
+  position: relative;
+  background: #000;
+  .hide {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+  }
+  & > input[type="file"] {
+    .hide();
+    cursor: pointer;
+    z-index: 3;
+  }
+  & > img {
+    .hide();
+    max-width: 100%;
+  }
+  ::v-deep(.cropper-container) {
+    position: relative;
+    z-index: 6;
+  }
+}
+</style>
