@@ -5,27 +5,41 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, CSSProperties, defineComponent, reactive, ref } from 'vue'
+import { computed, CSSProperties, defineComponent, nextTick, reactive, ref } from 'vue'
 import Cropper from 'cropperjs'
 import 'cropperjs/dist/cropper.css'
 import { fileToBase64, blobToBase64 } from './utils'
-import { Preview, CropperOptions, CroppedCanvasOptions, AwCropperProps, Emit } from './type'
+import { Preview, CropperOptions, CroppedCanvasOptions, AwCropperProps, Emit, CropperData } from './type'
 // cropperjs 模块
-function cropperModule (options: CropperOptions, preview: Preview, emit: Emit) {
+function cropperModule (props: AwCropperProps, preview: Preview, emit: Emit) {
+  const { options, cropShape } = props
   const imgDom = ref<HTMLImageElement>()
-  const cropper = reactive<{
-    instance: Cropper | null | any,
-    isInit: boolean;
-    rotate: number;
-  }>({
+  const cropper = reactive<CropperData>({
     instance: null,
     isInit: false,
     rotate: 0
   })
-  // 隐藏裁剪框
-  const hideCrop = () => {
+  // 设置crop裁剪框样式
+  const setCropStyle = () => {
     const el: HTMLElement | null = cropper.instance!.cropBox
-    el && (el.style.opacity = '0')
+    if (!el) return
+    if (cropShape === 'circle') {
+      const styles = {
+        borderRadius: '50%',
+        outlineColor: 'rgba(0,0,0,0)',
+        border: '1px solid #fff'
+      }
+      const crop: HTMLElement | null = el.querySelector('.cropper-view-box')
+      if (!crop) return
+      (el.querySelector('.cropper-face')! as HTMLElement).style.backgroundColor = 'unset'
+      Object.entries(styles).forEach(([name, value]: [string, string]) => {
+        (crop.style as any)[name] = value
+      })
+    } else {
+      if (typeof options.cropBoxResizable === 'boolean' && !options.cropBoxResizable) {
+        el.style.opacity = '0'
+      }
+    }
   }
   // 初始化裁剪器
   const cropperInit = (callback?: () => void) => {
@@ -47,9 +61,7 @@ function cropperModule (options: CropperOptions, preview: Preview, emit: Emit) {
     if (!cropper.isInit) {
       cropperInit(() => {
         emit('init', cropper.instance)
-        if (typeof options.cropBoxResizable === 'boolean' && !options.cropBoxResizable) {
-          hideCrop()
-        }
+        setCropStyle()
       })
     } else if (cropper.instance !== null) {
       const imgPath = preview.origin
@@ -129,8 +141,7 @@ function fileModule (preview: Preview) {
   const fileDom = ref<HTMLInputElement>()
   // file节点 change事件
   const onFileChanged = async (e: Event) => {
-    const el = e.target as HTMLInputElement
-    const { accept, files } = el
+    const { accept, files } = e.target as HTMLInputElement
     if (files!.length === 1 && accept.includes('image')) {
       try {
         const imgPath = await fileToBase64(files![0])
@@ -187,6 +198,14 @@ export default defineComponent({
     height: {
       type: String,
       default: '300px'
+    },
+    /**
+     * 裁剪框形状
+     * square | circle
+     */
+    cropShape: {
+      type: String,
+      default: 'square'
     }
   },
   setup (props: AwCropperProps, { emit }) {
@@ -197,7 +216,7 @@ export default defineComponent({
     return {
       preview,
       ...fileModule(preview),
-      ...cropperModule(props.options, preview, emit),
+      ...cropperModule(props, preview, emit),
       ...styleModule(props)
     }
   }

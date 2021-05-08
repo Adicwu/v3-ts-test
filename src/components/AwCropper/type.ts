@@ -1,3 +1,4 @@
+import Cropper from 'cropperjs'
 export interface Preview {
   origin: string;
   path: string;
@@ -46,6 +47,16 @@ export interface CropperOptions {
   * 默认 true
   */
   cropBoxResizable?: boolean;
+  /**
+   * 裁剪背景是否存在
+   * 默认 true
+   */
+  background?: boolean;
+  /**
+   * 裁剪框内是否显示中心指示器
+   * 默认 true
+   */
+  center?: boolean;
 }
 export interface CroppedCanvasOptions {
   width?: number;
@@ -54,14 +65,19 @@ export interface CroppedCanvasOptions {
   minHeight?: number;
   maxWidth?: number;
   maxHeight?: number;
-  fillColor?: string;
-  imageSmoothingEnabled?: boolean;
-  imageSmoothingQuality?: 'low' | 'medium' | 'high'; // 裁剪后图片质量
+  fillColor?: string; // 背景填充色，默认transparent
+  imageSmoothingEnabled?: boolean; // 图像平滑，默认true
+  imageSmoothingQuality?: 'low' | 'medium' | 'high'; // 裁剪后图片质量，默认low
 }
 export interface AwCropperProps {
   options: CropperOptions;
   width: string;
   height: string;
+  cropShape: 'square' | 'circle' | string;
 }
-
+export interface CropperData {
+  instance: Cropper | null | any,
+  isInit: boolean;
+  rotate: number;
+}
 export type Emit = (e: string, arg: any) => void
