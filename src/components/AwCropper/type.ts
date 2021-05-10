@@ -1,9 +1,9 @@
 import Cropper from 'cropperjs'
+export type CropperInstance = Cropper | any
 export interface Preview {
   origin: string;
-  path: string;
 }
-export interface CropperOptions {
+export interface CropperOptions extends Cropper.Options<HTMLImageElement> {
   /**
    * 宽高比例
    * 默认自由比例，格式为 x / y
@@ -33,7 +33,7 @@ export interface CropperOptions {
    */
   modal?: boolean;
   /**
-   * 裁剪框初始化大小（百分比格式，值为 0-1）
+   * 裁剪框初始化大小 基于图片高宽（百分比格式，值为 0-1）
    * 默认0.8
    */
   autoCropArea?: number;
@@ -57,6 +57,16 @@ export interface CropperOptions {
    * 默认 true
    */
   center?: boolean;
+  /**
+   * 裁剪框最小宽度
+   * 默认 0
+   */
+  minCropBoxWidth?: number;
+  /**
+   * 裁剪框最小高度
+   * 默认 0
+   */
+  minCropBoxHeight?: number;
 }
 export interface CroppedCanvasOptions {
   width?: number;
@@ -76,7 +86,7 @@ export interface AwCropperProps {
   cropShape: 'square' | 'circle' | string;
 }
 export interface CropperData {
-  instance: Cropper | null | any,
+  instance: CropperInstance;
   isInit: boolean;
   rotate: number;
 }

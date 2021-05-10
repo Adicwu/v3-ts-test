@@ -21,4 +21,6 @@
 | getImageData | 获取裁剪结果       | options getCroppedCanvas的参数，用于处理裁剪后图片质量；type 返回的结果类型 Blob \| string \| FormData；返回Promise |
 | rotate       | 图片旋转           | type 旋转方向(smooth 顺时针、adverse 逆时针、默认 重置旋转)， deg 旋转角度 deg为默认单位 |
 | reset        | 重置裁剪的所有状态 | ——                                                           |
+| destroy      | 销毁当前裁剪器     | ——                                                           |
+| clearFile    | 清空当前源数据     | ——                                                           |
 
