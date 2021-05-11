@@ -1,8 +1,8 @@
 <template>
-  <div class="spectrum-progress">
+  <div class="spectrum-progress" ref="selfDom">
     <input type="file" @change="onFileChanged" />
     <div class="spectrum-progress__content">
-      <canvas ref="canvas"></canvas>
+      <canvas ref="canvas" ></canvas>
       <!-- <li
         v-for="(item, index) in peaks"
         :style="computePeakStyle(item)"
@@ -12,13 +12,29 @@
   </div>
 </template>
 <script lang="ts">
-import { CSSProperties, defineComponent, ref } from 'vue'
-
+import { CSSProperties, defineComponent, onMounted, reactive, ref } from 'vue'
+function wait (delay = 500) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, delay)
+  })
+}
 export default defineComponent({
   name: 'SpectrumProgress',
   setup () {
     const peaks = ref<number[]>([])
     const canvas = ref<HTMLCanvasElement>()
+    const selfDom = ref<HTMLElement>()
+
+    const self = reactive({
+      width: 0,
+      height: 0
+    })
+
+    onMounted(() => {
+      const { clientWidth, clientHeight } = selfDom.value!
+      canvas.value!.width = self.width = clientWidth
+      canvas.value!.height = self.height = clientHeight
+    })
 
     const computePeakStyle = (peak: number) => {
       peak = peak * 1000
@@ -71,7 +87,7 @@ export default defineComponent({
         // 创建环境对象
         const context = new AudioContext()
         // 解码
-        context.decodeAudioData(encodedBuffer, decodedBuffer => {
+        context.decodeAudioData(encodedBuffer, (decodedBuffer) => {
           // 创建数据缓存节点
           const dataSource = context.createBufferSource()
           // 加载缓存
@@ -81,23 +97,46 @@ export default defineComponent({
           dataSource.connect(context.destination)
           // 开始播放
           dataSource.start()
-          peaks.value = getPeaks(dataSource.buffer)
+          peaks.value = getPeaks(dataSource.buffer, 30)
+          console.log(peaks.value)
+          drawSpectrum()
           // console.log(dataSource.buffer.getChannelData(0))
         })
       }
     }
-    const drawSpectrum = () => {
+    const drawSpectrum = async () => {
       const ctx = canvas.value!.getContext('2d')
-      peaks.value.forEach((peak:number) => {
-        ctx.beginPath()
-        ctx.closePath()
-      })
+      if (!ctx) return
+      // console.log(peaks.value)
+      const offsetX = 0.1
+      const offsetY = 400
+      const loop = {
+        limit: peaks.value.length / 10,
+        cur: 0,
+        count: peaks.value.length
+      }
+      for (let index = 0; index < loop.count; index++) {
+        const { limit, cur } = loop
+        if (index > limit * cur) {
+          await wait()
+          console.log('loop')
+          loop.cur++
+        }
+        const peak = peaks.value[index]
+        const x = offsetX * index
+        const y = Math.abs(Number(peak.toFixed(4))) * (offsetY * 1.4)
+        const yLimit = (offsetY - y / 2)
+        ctx.moveTo(x, yLimit)
+        ctx.lineTo(x, yLimit + y)
+        ctx.stroke()
+      }
     }
     return {
       onFileChanged,
       peaks,
       computePeakStyle,
-      canvas
+      canvas,
+      selfDom
     }
   }
 })
@@ -105,8 +144,12 @@ export default defineComponent({
 <style lang="less" scoped>
 .spectrum-progress {
   position: relative;
-  padding: 16px;
+  width: 95vw;
+  height: 80vh;
   border: 2px solid #000;
+  input{
+    position: absolute;
+  }
   &__content {
     // display: flex;
     // li {
