@@ -1,15 +1,15 @@
 <template>
   <div class="content">
-    <AvatarCropper />
+    <SpectrumProgress />
   </div>
 </template>
 <script lang="ts">
 import { defineComponent, ref } from 'vue'
-import AvatarCropper from './components/AvatarCropper/AvatarCropper.vue'
+import SpectrumProgress from './components/AwAudioVisualization/SpectrumProgress.vue'
 export default defineComponent({
   name: 'App',
   components: {
-    AvatarCropper
+    SpectrumProgress
   },
   setup () {
     return {

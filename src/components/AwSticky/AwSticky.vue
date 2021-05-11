@@ -50,7 +50,7 @@ export default defineComponent({
       default: 0
     }
   },
-  setup (props, { emit }:SetupContext) {
+  setup (props, { emit }: SetupContext) {
     const selfDom = ref<HTMLDivElement>()
     const self = reactive<{
       width: number;
