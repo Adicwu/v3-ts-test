@@ -2,12 +2,7 @@
   <div class="spectrum-progress" ref="selfDom">
     <input type="file" @change="onFileChanged" />
     <div class="spectrum-progress__content">
-      <canvas ref="canvas" ></canvas>
-      <!-- <li
-        v-for="(item, index) in peaks"
-        :style="computePeakStyle(item)"
-        :key="index"
-      ></li> -->
+      <canvas ref="canvas"></canvas>
     </div>
   </div>
 </template>
@@ -18,10 +13,28 @@ function wait (delay = 500) {
     setTimeout(resolve, delay)
   })
 }
+function averageSplit (arr: any[], limit = 3) {
+  const result = []
+  const arrLen = arr.length
+  for (let i = 0, len = arrLen; i < len; i += limit) {
+    result.push(arr.slice(i, i + limit))
+  }
+  return result
+}
+async function arrayDelayLoop (arr: any[][], callback: (item: any, index: number) => void, delay = 300) {
+  const cur = arr.shift()
+  if (cur) {
+    cur.forEach(callback)
+    console.log('wait')
+    await wait(delay)
+    arrayDelayLoop(arr, callback, delay)
+  } else {
+    console.log('end')
+  }
+}
 export default defineComponent({
   name: 'SpectrumProgress',
   setup () {
-    const peaks = ref<number[]>([])
     const canvas = ref<HTMLCanvasElement>()
     const selfDom = ref<HTMLElement>()
 
@@ -97,43 +110,47 @@ export default defineComponent({
           dataSource.connect(context.destination)
           // 开始播放
           dataSource.start()
-          peaks.value = getPeaks(dataSource.buffer, 30)
-          console.log(peaks.value)
-          drawSpectrum()
+          // peaks.value = getPeaks(dataSource.buffer, 30)
+          // console.log(peaks.value)
+          drawSpectrum(getPeaks(dataSource.buffer, 4))
           // console.log(dataSource.buffer.getChannelData(0))
         })
       }
     }
-    const drawSpectrum = async () => {
+    const drawSpectrum = (peaks: number[]) => {
       const ctx = canvas.value!.getContext('2d')
       if (!ctx) return
-      // console.log(peaks.value)
-      const offsetX = 0.1
+      const offsetX = 1
       const offsetY = 400
-      const loop = {
-        limit: peaks.value.length / 10,
+      const loop: {
+        limit: number;
+        cur: number;
+        count: number;
+        group: number[][];
+      } = {
+        limit: peaks.length / 40,
         cur: 0,
-        count: peaks.value.length
+        count: peaks.length,
+        group: []
       }
-      for (let index = 0; index < loop.count; index++) {
-        const { limit, cur } = loop
-        if (index > limit * cur) {
-          await wait()
-          console.log('loop')
-          loop.cur++
-        }
-        const peak = peaks.value[index]
-        const x = offsetX * index
+      loop.group = averageSplit(peaks, loop.limit)
+      console.log(loop, 'start')
+      arrayDelayLoop(loop.group, (peak) => {
+        loop.cur++
+        const x = offsetX * loop.cur
         const y = Math.abs(Number(peak.toFixed(4))) * (offsetY * 1.4)
         const yLimit = (offsetY - y / 2)
+        const grd = ctx.createLinearGradient(x, yLimit, x, yLimit + y)
+        grd.addColorStop(0, '#24dae2')
+        grd.addColorStop(1, '#00f59a')
+        ctx.strokeStyle = grd
         ctx.moveTo(x, yLimit)
         ctx.lineTo(x, yLimit + y)
         ctx.stroke()
-      }
+      }, 300)
     }
     return {
       onFileChanged,
-      peaks,
       computePeakStyle,
       canvas,
       selfDom
@@ -147,7 +164,7 @@ export default defineComponent({
   width: 95vw;
   height: 80vh;
   border: 2px solid #000;
-  input{
+  input {
     position: absolute;
   }
   &__content {
