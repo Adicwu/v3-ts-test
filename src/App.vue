@@ -1,15 +1,21 @@
 <template>
-  <div class="content" >
-    <img src="@/assets/test2.png" alt="" v-img-theme-color>
+  <div class="content">
+    <AwAmazing />
+    <!-- <div class="content__inner"></div> -->
+    <!-- <img src="@/assets/test2.png" alt="" > -->
   </div>
 </template>
 <script lang="ts">
 import ImgThemeColor from '@/directs/imgThemeColor.direct'
+import AwAmazing from '@/components/AwAmazing/AwAmazing.vue'
 import { defineComponent } from 'vue'
 export default defineComponent({
   name: 'App',
   directives: {
     ImgThemeColor
+  },
+  components: {
+    AwAmazing
   }
 })
 </script>
@@ -24,9 +30,5 @@ export default defineComponent({
   display: flex;
   justify-content: center;
   align-items: center;
-  img{
-    width: 600px;
-    box-shadow: 7px 8px 16px var(--theme-color);
-  }
 }
 </style>
