@@ -1,24 +1,19 @@
 <template>
-  <div class="content">
-    <SpectrumProgress />
+  <div class="content" >
+    <img src="@/assets/test2.png" alt="" v-img-theme-color>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref } from 'vue'
-import SpectrumProgress from './components/AwAudioVisualization/SpectrumProgress.vue'
+import ImgThemeColor from '@/directs/imgThemeColor.direct'
+import { defineComponent } from 'vue'
 export default defineComponent({
   name: 'App',
-  components: {
-    SpectrumProgress
-  },
-  setup () {
-    return {
-
-    }
+  directives: {
+    ImgThemeColor
   }
 })
 </script>
-<style>
+<style lang="less">
 * {
   padding: 0;
   margin: 0;
@@ -29,9 +24,9 @@ export default defineComponent({
   display: flex;
   justify-content: center;
   align-items: center;
-}
-button {
-  margin: 16px;
-  padding: 0 16px;
+  img{
+    width: 600px;
+    box-shadow: 7px 8px 16px var(--theme-color);
+  }
 }
 </style>
