@@ -1,22 +1,23 @@
 <template>
   <div class="content">
-    <AwAmazing />
-    <!-- <div class="content__inner"></div> -->
-    <!-- <img src="@/assets/test2.png" alt="" > -->
+    <button @click="add">add</button>
+    <p>{{ fullName("adicw") }}</p>
   </div>
 </template>
 <script lang="ts">
-import ImgThemeColor from '@/directs/imgThemeColor.direct'
-import AwAmazing from '@/components/AwAmazing/AwAmazing.vue'
-import { defineComponent } from 'vue'
+import { computed, defineComponent, ref } from 'vue'
 export default defineComponent({
   name: 'App',
-  directives: {
-    ImgThemeColor
-  },
-  components: {
-    AwAmazing
+  setup () {
+    const count = ref(0)
+    const add = () => count.value++
+    const fullName = computed(() => (first: string) => count.value + ' - ' + first)
+    return {
+      fullName,
+      add
+    }
   }
+
 })
 </script>
 <style lang="less">
