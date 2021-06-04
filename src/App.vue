@@ -1,20 +1,30 @@
 <template>
   <div class="content">
-    <button @click="add">add</button>
-    <p>{{ fullName("adicw") }}</p>
+    <AwEditor v-model="val" @save="xxx">
+      <template #header>
+        <b>readme.md</b>
+      </template>
+    </AwEditor>
+    <!-- <div class="content-show ql-snow" v-html="val"></div> -->
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, ref } from 'vue'
+import { defineComponent, ref } from 'vue'
+import AwEditor from '@/components/AwEditor/AwEditor.vue'
+import '@vueup/vue-quill/dist/vue-quill.snow.css'
 export default defineComponent({
   name: 'App',
+  components: {
+    AwEditor
+  },
   setup () {
-    const count = ref(0)
-    const add = () => count.value++
-    const fullName = computed(() => (first: string) => count.value + ' - ' + first)
+    const val = ref('')
+    const xxx = (e: any) => {
+      console.log(e, 'xxx')
+    }
     return {
-      fullName,
-      add
+      val,
+      xxx
     }
   }
 
@@ -31,5 +41,9 @@ export default defineComponent({
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
+  &-show {
+    margin-top: 60px;
+  }
 }
 </style>
