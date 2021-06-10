@@ -1,39 +1,24 @@
 <template>
   <div class="content">
-    <AwSwipe class="swipe" :unActiveStyle="{
-      scale: 0.7
-    }">
-      <AwSwipeItem
-        class="swipe-item"
-        v-for="item in cards"
-        :key="item"
-        :style="{ background: item }"
-      />
-    </AwSwipe>
+    <AwslideX style="width: 600px;">
+      <AwslideItem v-for="item in 10" :key="item">
+        <div class="item"></div>
+      </AwslideItem>
+    </AwslideX>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, reactive, ref } from 'vue'
-import AwSwipe from '@/components/AwSwiper/AwSwipe.vue'
-import AwSwipeItem from '@/components/AwSwiper/AwSwipeItem.vue'
-import '@vueup/vue-quill/dist/vue-quill.snow.css'
+import { defineComponent } from 'vue'
+import AwslideX from '@/components/AwSlide/AwslideX.vue'
+import AwslideItem from '@/components/AwSlide/AwslideItem.vue'
 export default defineComponent({
   name: 'App',
   components: {
-    AwSwipe,
-    AwSwipeItem
+    AwslideX,
+    AwslideItem
   },
   setup () {
-    const cards = [
-      'red',
-      'black',
-      'pink',
-      'green',
-      'blue',
-      'yellow'
-    ]
     return {
-      cards
     }
   }
 
@@ -50,15 +35,16 @@ export default defineComponent({
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-direction: column;
-  .swipe {
-    width: 800px;
-    height: 400px;
-    overflow: hidden;
-    &-item {
-      width: 260px;
-      height: 260px;
-    }
+  background: #333;
+  // flex-direction: column;
+  .item{
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    padding: 10px;
+    box-sizing: border-box;
+    background: linear-gradient(to bottom,#fff,#def);
+    background-clip: content-box;
   }
 }
 </style>
